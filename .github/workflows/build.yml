@@ -1,0 +1,38 @@
+name: Build Project EVOLVE
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+          cache-dependency-path: '**/pom.xml'
+
+      - name: Build with Maven
+        shell: bash
+        run: |
+          POM="$(find . -name pom.xml -not -path '*/target/*' | head -n 1)"
+          if [ -z "$POM" ]; then
+            echo "pom.xml not found"
+            exit 1
+          fi
+          echo "Using $POM"
+          mvn -B -f "$POM" clean package
+
+      - name: Upload JAR
+        uses: actions/upload-artifact@v4
+        with:
+          name: ProjectEVOLVE-v0.3.0
+          path: '**/target/project-evolve-0.3.0.jar'
+          if-no-files-found: error
